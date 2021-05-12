@@ -298,7 +298,8 @@
     }
 }
 
-.searchbox {
+.searchbox,
+.searchfield {
     position: fixed;
     top: 10%;
     width: 50%;
@@ -314,7 +315,8 @@
         display: block;
     }
 
-    &__field {
+    &__field,
+    &__input {
         width: 100%;
         line-height: 150%;
         font-size: 1.2rem;
