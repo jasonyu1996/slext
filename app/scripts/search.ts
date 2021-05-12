@@ -10,6 +10,8 @@ export class Search {
     private currentIndex: number;
     private results: HTMLElement[];
     private active: boolean;
+    private pdfViewer: JQuery<HTMLElement>;
+    private prevScrollTop: number;
 
     field: JQuery<HTMLElement>;
 
@@ -75,19 +77,38 @@ export class Search {
         this.update();
     }
 
-    public update(): void {
-        let re = new RegExp(this.keyword, "g");
-        const pages = $(".page-container");
-        this.results = [];
-        pages.each((_index, element) => {
-            const occurences = ($(element).text().toString().match(re) || []).length;
-            for (let i = 0; i < occurences; i++) this.results.push(element);
-        });
-        if (this.currentIndex >= this.results.length) {
-            this.currentIndex = this.results.length - 1;
+    private startSearchOnPage(page_list: HTMLElement[], i: number, re: RegExp): void {
+        if (i >= page_list.length) {
+            this.pdfViewer.scrollTop(this.prevScrollTop);
+            if (this.currentIndex >= this.results.length) {
+                this.currentIndex = this.results.length - 1;
+            }
+            if (this.currentIndex < 0) this.currentIndex = 0;
+            this.goToCurrent();
+        } else {
+            page_list[i].scrollIntoView();
+            setTimeout(() => {
+                const occurrences = ($(page_list[i]).text().toString().match(re) || []).length;
+                for (let j = 0; j < occurrences; j++) this.results.push(page_list[i]);
+                this.startSearchOnPage(page_list, i + 1, re);
+            }, 500);
         }
-        if (this.currentIndex < 0) this.currentIndex = 0;
-        this.goToCurrent();
+    }
+
+    public update(): void {
+        this.pdfViewer = $(".pdfjs-viewer");
+        this.prevScrollTop = 0;
+        this.prevScrollTop = this.pdfViewer.scrollTop();
+
+        this.pdfViewer.scrollTop(this.pdfViewer[0].scrollHeight);
+
+        setTimeout(() => {
+            let re = new RegExp(this.keyword, "g");
+            this.results = [];
+            const page_list = $(".page-container").get();
+
+            this.startSearchOnPage(page_list, 0, re);
+        }, 500);
     }
 
     public goToCurrent(): void {
